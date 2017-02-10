@@ -18,6 +18,9 @@ private:
 	frc::LiveWindow* lw = frc::LiveWindow::GetInstance();
 	frc::Timer timer;
 	frc::Talon omniwheels1{3}, omniwheels2{4};
+	frc::Compressor *c = new Compressor(0);
+	//get rid of later
+	frc::DoubleSolenoid soldub {0,1};
 	Shooter kapow;
 
 	void AutonomousInit() override {
@@ -35,6 +38,7 @@ private:
 	}
 
 	void TeleopInit() override {
+		c->SetClosedLoopControl(true);
 
 	}
 
@@ -43,6 +47,13 @@ private:
 		myRobot.TankDrive(-joystick_L.GetY(),-joystick_R.GetY());
 		omniwheels1.Set((joystick_R.GetX()+joystick_L.GetX())/2);
 		omniwheels2.Set((joystick_R.GetX()+joystick_L.GetX())/2);
+		// get rid of later
+		if (controller.GetRawButton(1)){
+			soldub.Set(DoubleSolenoid::Value::kForward);
+		}
+		else if (controller.GetRawButton(2)){
+			soldub.Set(DoubleSolenoid::Value::kReverse);
+		}
 	}
 
 	void TestPeriodic() override {
