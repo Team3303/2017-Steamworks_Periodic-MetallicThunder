@@ -4,12 +4,21 @@
 #include <RobotDrive.h>
 #include <Timer.h>
 #include <TalonTest.cpp>
+#include <GRIP.cpp>
 
 class Robot: public frc::IterativeRobot {
 public:
 	Robot() {
 		myRobot.SetExpiration(0.1);
 		timer.Start();
+	//	CameraServer::GetInstance()->SetQuality(50);
+		CameraServer::GetInstance()->StartAutomaticCapture(0);
+//		grip::GripPipeline thingy;
+
+		cs::CvSink cvSink = CameraServer::GetInstance()->GetVideo();
+
+		cs::CvSource outputStream = CameraServer::GetInstance()->PutVideo("Blur", 640, 480);
+//		thingy.Process(CameraServer::GetInstance()->GetVideo(0));
 	}
 
 private:
@@ -18,9 +27,11 @@ private:
 	frc::LiveWindow* lw = frc::LiveWindow::GetInstance();
 	frc::Timer timer;
 	frc::Talon omniwheels1{3}, omniwheels2{4};
+
 	frc::Compressor *c = new Compressor(0);
 	//get rid of later
 	frc::DoubleSolenoid soldub {0,1};
+
 	Shooter kapow;
 
 	void AutonomousInit() override {
