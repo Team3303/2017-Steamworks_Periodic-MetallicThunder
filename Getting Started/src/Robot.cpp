@@ -28,11 +28,10 @@ private:
 	frc::Timer timer;
 	frc::Talon omniwheels1{3}, omniwheels2{4};
 
-	frc::Compressor *c = new Compressor(0);
-	//get rid of later
-	frc::DoubleSolenoid soldub {0,1};
-
-	Shooter kapow;
+	frc::Talon shooter{5};
+	frc::Talon intake{6};
+	frc::Talon climber{7};
+	frc::DoubleSolenoid piston{0, 1};
 
 	void AutonomousInit() override {
 		timer.Reset();
@@ -58,16 +57,39 @@ private:
 		myRobot.TankDrive(-joystick_L.GetY(),-joystick_R.GetY());
 		omniwheels1.Set((joystick_R.GetX()+joystick_L.GetX())/2);
 		omniwheels2.Set((joystick_R.GetX()+joystick_L.GetX())/2);
-		// get rid of later
+
 		if (controller.GetRawButton(1)){
-			soldub.Set(DoubleSolenoid::Value::kForward);
+			piston.Set(DoubleSolenoid::Value::kForward);
 		}
 		else if (controller.GetRawButton(2)){
-			soldub.Set(DoubleSolenoid::Value::kReverse);
+			piston.Set(DoubleSolenoid::Value::kReverse);
+		}
+
+		//Basic Shooter
+		if(controller.GetRawButton(5)){
+			shooter.Set(1.0);
+		}
+		else if(controller.GetRawButton(4)){
+			shooter.Set(0.0);
+		}
+
+		//intake
+		if(controller.GetRawButton(2)){
+			intake.Set(1.0);
+		}
+		else if (controller.GetRawButton(3)){
+			intake.Set(0.0);
+		}
+
+		/* Climber */
+		if(controller.GetRawButton(0)){
+			climber.Set(1.0);
+		} else if(controller.GetRawButton(1)){
+			climber.Set(0.0);
 		}
 	}
 
-	//something random
+	//Chickendances
 	void TestPeriodic() override {
 		lw->Run();
 	}
