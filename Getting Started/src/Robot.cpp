@@ -14,7 +14,7 @@ public:
 	//	CameraServer::GetInstance()->SetQuality(50);
 		CameraServer::GetInstance()->StartAutomaticCapture(0);
 //		grip::GripPipeline thingy;
-
+//random comment to test branch pushing
 		cs::CvSink cvSink = CameraServer::GetInstance()->GetVideo();
 
 		cs::CvSource outputStream = CameraServer::GetInstance()->PutVideo("Blur", 640, 480);
