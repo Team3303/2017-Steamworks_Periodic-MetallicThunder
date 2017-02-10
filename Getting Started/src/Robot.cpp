@@ -48,8 +48,11 @@ private:
 	}
 
 	void TeleopInit() override {
+<<<<<<< HEAD
 		c->SetClosedLoopControl(true);
 
+=======
+>>>>>>> 7c21205... figuring out the vision tracking
 	}
 
 	void TeleopPeriodic() override {
@@ -86,6 +89,14 @@ private:
 			climber.Set(1.0);
 		} else if(controller.GetRawButton(1)){
 			climber.Set(0.0);
+		}
+
+		//Piston (not sticky)
+		if (controller.GetRawButton(1)){
+			piston.Set(DoubleSolenoid::Value::kForward);
+		}
+		else if (controller.GetRawButton(2)){
+			piston.Set(DoubleSolenoid::Value::kReverse);
 		}
 	}
 
