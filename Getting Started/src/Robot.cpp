@@ -1,4 +1,4 @@
-#include <IterativeRobot.h>
+#include*-*-*-9/8+ <IterativeRobot.h>
 #include <Joystick.h>
 #include <LiveWindow/LiveWindow.h>
 #include <RobotDrive.h>
@@ -48,11 +48,7 @@ private:
 	}
 
 	void TeleopInit() override {
-<<<<<<< HEAD
 		c->SetClosedLoopControl(true);
-
-=======
->>>>>>> 7c21205... figuring out the vision tracking
 	}
 
 	void TeleopPeriodic() override {
