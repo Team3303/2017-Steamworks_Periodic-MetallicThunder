@@ -7,6 +7,7 @@
 #include <GRIP.cpp>
 
 class Robot: public frc::IterativeRobot {
+
 public:
 	Robot() {
 		myRobot.SetExpiration(0.1);
@@ -19,6 +20,7 @@ public:
 
 		cs::CvSource outputStream = CameraServer::GetInstance()->PutVideo("Blur", 640, 480);
 //		thingy.Process(CameraServer::GetInstance()->GetVideo(0));
+
 	}
 
 private:
@@ -32,6 +34,32 @@ private:
 	frc::Talon intake{6};
 	frc::Talon climber{7};
 	frc::DoubleSolenoid piston{0, 1};
+
+	bool wasShooting = false;
+	bool isShooting = false;
+
+	bool d_pad_up() {
+		if ( (controller.GetPOV(0) >= 0 && controller.GetPOV(0) <= 45 )
+				|| controller.GetPOV(0) == 315 ) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	bool d_pad_down(){
+		if ( controller.GetPOV(0) >= 135 && controller.GetPOV(0) <= 215 ) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	bool lb(){
+		return controller.GetRawButton(4);
+	}
+	bool rb(){
+		return controller.GetRawButton(5);
+	}
+
 
 	void AutonomousInit() override {
 		timer.Reset();
@@ -48,23 +76,34 @@ private:
 	}
 
 	void TeleopInit() override {
-		c->SetClosedLoopControl(true);
 	}
 
 	void TeleopPeriodic() override {
-		// Drive with arcade style (use right stick)
+		//Omnidrive
 		myRobot.TankDrive(-joystick_L.GetY(),-joystick_R.GetY());
 		omniwheels1.Set((joystick_R.GetX()+joystick_L.GetX())/2);
 		omniwheels2.Set((joystick_R.GetX()+joystick_L.GetX())/2);
+
 		//Basic Shooter
-		if(controller.GetRawButton(5)){
-			shooter.Set(1.0);
-		}
-		else if(controller.GetRawButton(4)){
-			shooter.Set(0.0);
+//		if(controller.GetRawButton(5)){
+//			shooter.Set(1.0);
+//		}
+//		else if(controller.GetRawButton(4)){
+//			shooter.Set(0.0);
+//		}
+
+		if(lb()){
+			if (!isShooting){
+				shooter.Set(1.0);
+				isShooting = true;
+			}else{
+				shooter.Set(0.0);
+				isShooting = false;
+			}
+
 		}
 
-		//intake
+		//Intake
 		if(controller.GetRawButton(2)){
 			intake.Set(1.0);
 		}
@@ -72,7 +111,7 @@ private:
 			intake.Set(0.0);
 		}
 
-		/* Climber */
+		//Climber
 		if(controller.GetRawButton(0)){
 			climber.Set(1.0);
 		} else if(controller.GetRawButton(1)){
@@ -80,15 +119,14 @@ private:
 		}
 
 		//Piston (not sticky)
-		if (controller.GetRawButton(1)){
+		if (d_pad_up()){
 			piston.Set(DoubleSolenoid::Value::kForward);
 		}
-		else if (controller.GetRawButton(2)){
+		else if (d_pad_down()){
 			piston.Set(DoubleSolenoid::Value::kReverse);
 		}
 	}
 
-	//Chickendances
 	void TestPeriodic() override {
 		lw->Run();
 	}
