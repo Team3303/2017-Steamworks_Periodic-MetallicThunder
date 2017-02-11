@@ -1,4 +1,4 @@
-#include*-*-*-9/8+ <IterativeRobot.h>
+#include <IterativeRobot.h>
 #include <Joystick.h>
 #include <LiveWindow/LiveWindow.h>
 #include <RobotDrive.h>
