@@ -56,14 +56,6 @@ private:
 		myRobot.TankDrive(-joystick_L.GetY(),-joystick_R.GetY());
 		omniwheels1.Set((joystick_R.GetX()+joystick_L.GetX())/2);
 		omniwheels2.Set((joystick_R.GetX()+joystick_L.GetX())/2);
-
-		if (controller.GetRawButton(1)){
-			piston.Set(DoubleSolenoid::Value::kForward);
-		}
-		else if (controller.GetRawButton(2)){
-			piston.Set(DoubleSolenoid::Value::kReverse);
-		}
-
 		//Basic Shooter
 		if(controller.GetRawButton(5)){
 			shooter.Set(1.0);
