@@ -15,7 +15,7 @@ public:
 	//	CameraServer::GetInstance()->SetQuality(50);
 		CameraServer::GetInstance()->StartAutomaticCapture(0);
 //		grip::GripPipeline thingy;
-//random comment to test branch pushing
+
 		cs::CvSink cvSink = CameraServer::GetInstance()->GetVideo();
 
 		cs::CvSource outputStream = CameraServer::GetInstance()->PutVideo("Blur", 640, 480);
@@ -103,7 +103,7 @@ private:
 
 		}
 
-		//Intake
+		//Intake Controls
 		if(controller.GetRawButton(2)){
 			intake.Set(1.0);
 		}
@@ -111,14 +111,14 @@ private:
 			intake.Set(0.0);
 		}
 
-		//Climber
+		//Climber Controls
 		if(controller.GetRawButton(0)){
 			climber.Set(1.0);
 		} else if(controller.GetRawButton(1)){
 			climber.Set(0.0);
 		}
 
-		//Piston (not sticky)
+		//Piston Controls
 		if (d_pad_up()){
 			piston.Set(DoubleSolenoid::Value::kForward);
 		}
