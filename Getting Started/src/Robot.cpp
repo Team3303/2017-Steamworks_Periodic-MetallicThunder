@@ -15,7 +15,7 @@ public:
 	//	CameraServer::GetInstance()->SetQuality(50);
 		CameraServer::GetInstance()->StartAutomaticCapture(0);
 //		grip::GripPipeline thingy;
-//random comment to test branch pushing
+
 		cs::CvSink cvSink = CameraServer::GetInstance()->GetVideo();
 
 		cs::CvSource outputStream = CameraServer::GetInstance()->PutVideo("Blur", 640, 480);
@@ -114,7 +114,8 @@ private:
 			}
 
 		}
-		//Intake
+
+		//Intake Controls
 		wasLbPressed = isLbPressed;
 		isLbPressed = Lb();
 		if(!wasLbPressed && isLbPressed){
@@ -126,9 +127,9 @@ private:
 				intake.Set(0.0);
 				isIntaking = false;
 			}
-
 		}
-		//Climber
+
+		//Climber Controls
 		wasAPressed = isAPressed;
 		isAPressed = A();
 		if(!wasAPressed && isAPressed){
@@ -140,9 +141,8 @@ private:
 				climber.Set(0.0);
 				isClimbing = false;
 			}
-
 		}
-		//Piston On/Off
+		//Piston Controls
 		wasBPressed = isBPressed;
 		isBPressed = B();
 		if(!wasBPressed && isBPressed){
@@ -157,6 +157,7 @@ private:
 
 		}
 	}
+
 
 	void TestPeriodic() override {
 		lw->Run();
