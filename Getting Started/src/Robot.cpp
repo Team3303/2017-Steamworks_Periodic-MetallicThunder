@@ -34,9 +34,18 @@ private:
 	frc::Talon intake{6};
 	frc::Talon climber{7};
 	frc::DoubleSolenoid piston{0, 1};
-
-	bool wasShooting = false;
 	bool isShooting = false;
+	bool wasRbPressed = false;
+	bool isRbPressed = false;
+	bool isIntaking = false;
+	bool wasLbPressed = false;
+	bool isLbPressed = false;
+	bool isClimbing = false;
+	bool wasAPressed = false;
+	bool isAPressed = false;
+	bool isPistonOut = false;
+	bool wasBPressed = false;
+	bool isBPressed = false;
 
 	bool d_pad_up() {
 		if ( (controller.GetPOV(0) >= 0 && controller.GetPOV(0) <= 45 )
@@ -53,11 +62,18 @@ private:
 			return false;
 		}
 	}
-	bool lb(){
-		return controller.GetRawButton(4);
+
+	bool B(){
+		return controller.GetRawButton(2);
 	}
-	bool rb(){
+	bool Rb(){
+		return controller.GetRawButton(6);
+	}
+	bool Lb(){
 		return controller.GetRawButton(5);
+	}
+	bool A(){
+		return controller.GetRawButton(1);
 	}
 
 
@@ -85,45 +101,60 @@ private:
 		omniwheels2.Set((joystick_R.GetX()+joystick_L.GetX())/2);
 
 		//Basic Shooter
-//		if(controller.GetRawButton(5)){
-//			shooter.Set(1.0);
-//		}
-//		else if(controller.GetRawButton(4)){
-//			shooter.Set(0.0);
-//		}
-
-		if(lb()){
+		wasRbPressed = isRbPressed;
+		isRbPressed = Rb();
+		if(!wasRbPressed && isRbPressed){
 			if (!isShooting){
-				shooter.Set(1.0);
+				shooter.Set (1.0);
 				isShooting = true;
-			}else{
+			}
+			else{
 				shooter.Set(0.0);
 				isShooting = false;
 			}
 
 		}
-
 		//Intake
-		if(controller.GetRawButton(2)){
-			intake.Set(1.0);
-		}
-		else if (controller.GetRawButton(3)){
-			intake.Set(0.0);
-		}
+		wasLbPressed = isLbPressed;
+		isLbPressed = Lb();
+		if(!wasLbPressed && isLbPressed){
+			if (!isIntaking){
+				intake.Set (1.0);
+				isIntaking = true;
+			}
+			else{
+				intake.Set(0.0);
+				isIntaking = false;
+			}
 
+		}
 		//Climber
-		if(controller.GetRawButton(0)){
-			climber.Set(1.0);
-		} else if(controller.GetRawButton(1)){
-			climber.Set(0.0);
-		}
+		wasAPressed = isAPressed;
+		isAPressed = A();
+		if(!wasAPressed && isAPressed){
+			if (!isClimbing){
+				climber.Set (1.0);
+				isClimbing = true;
+			}
+			else{
+				climber.Set(0.0);
+				isClimbing = false;
+			}
 
-		//Piston (not sticky)
-		if (d_pad_up()){
-			piston.Set(DoubleSolenoid::Value::kForward);
 		}
-		else if (d_pad_down()){
-			piston.Set(DoubleSolenoid::Value::kReverse);
+		//Piston On/Off
+		wasBPressed = isBPressed;
+		isBPressed = B();
+		if(!wasBPressed && isBPressed){
+			if (!isPistonOut){
+				piston.Set(DoubleSolenoid::Value::kForward);
+				isPistonOut = true;
+			}
+			else{
+				piston.Set(DoubleSolenoid::Value::kReverse);
+				isPistonOut = false;
+			}
+
 		}
 	}
 
