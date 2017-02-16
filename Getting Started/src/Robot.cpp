@@ -14,7 +14,7 @@ public:
 		timer.Start();
 	//	CameraServer::GetInstance()->SetQuality(50);
 		CameraServer::GetInstance()->StartAutomaticCapture(0);
-//		grip::GripPipeline thingy;
+ 		grip::GripPipeline thingy;
 
 		cs::CvSink cvSink = CameraServer::GetInstance()->GetVideo();
 

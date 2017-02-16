@@ -48,10 +48,10 @@
 //
 //
 //} // end namespace grip
-//
-//
-//
-//#endif /* SRC_GRIP_H_ */
+
+
+
+#endif /* SRC_GRIP_H_ */
 
 
 #pragma once
