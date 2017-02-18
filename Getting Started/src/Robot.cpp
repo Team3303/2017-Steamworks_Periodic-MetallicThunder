@@ -115,20 +115,6 @@ private:
 
 		}
 
-		//Intake Controls
-		wasLbPressed = isLbPressed;
-		isLbPressed = Lb();
-		if(!wasLbPressed && isLbPressed){
-			if (!isIntaking){
-				intake.Set (1.0);
-				isIntaking = true;
-			}
-			else{
-				intake.Set(0.0);
-				isIntaking = false;
-			}
-		}
-
 		//Climber Controls
 		wasAPressed = isAPressed;
 		isAPressed = A();
