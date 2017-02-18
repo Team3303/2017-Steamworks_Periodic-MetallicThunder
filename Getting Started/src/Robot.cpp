@@ -5,17 +5,11 @@
 #include <Timer.h>
 #include <TalonTest.cpp>
 #include <GRIP.cpp>
-#include "WPILib.h"
-#include <iostream>
 
-class Robot: public frc::IterativeRobot{
+class Robot: public frc::IterativeRobot {
+
 public:
-	std::shared_ptr<NetworkTable> table;
-
 	Robot() {
-
-		table = NetworkTable::GetTable("GRIP/myContoursReport");
-
 		myRobot.SetExpiration(0.1);
 		timer.Start();
 	//	CameraServer::GetInstance()->SetQuality(50);
@@ -26,6 +20,7 @@ public:
 
 		cs::CvSource outputStream = CameraServer::GetInstance()->PutVideo("Blur", 640, 480);
 //		thingy.Process(CameraServer::GetInstance()->GetVideo(0));
+
 	}
 
 private:
@@ -68,10 +63,19 @@ private:
 		}
 	}
 
-	bool B(){ return controller.GetRawButton(2); }
-	bool Rb(){ return controller.GetRawButton(6); }
-	bool Lb(){ return controller.GetRawButton(5); }
-	bool A(){ return controller.GetRawButton(1); }
+	bool B(){
+		return controller.GetRawButton(2);
+	}
+	bool Rb(){
+		return controller.GetRawButton(6);
+	}
+	bool Lb(){
+		return controller.GetRawButton(5);
+	}
+	bool A(){
+		return controller.GetRawButton(1);
+	}
+
 
 	void AutonomousInit() override {
 		timer.Reset();
@@ -87,7 +91,8 @@ private:
 		}
 	}
 
-	void TeleopInit() override {}
+	void TeleopInit() override {
+	}
 
 	void TeleopPeriodic() override {
 		//Omnidrive
@@ -106,6 +111,21 @@ private:
 			else{
 				shooter.Set(0.0);
 				isShooting = false;
+			}
+
+		}
+
+		//Intake Controls
+		wasLbPressed = isLbPressed;
+		isLbPressed = Lb();
+		if(!wasLbPressed && isLbPressed){
+			if (!isIntaking){
+				intake.Set (1.0);
+				isIntaking = true;
+			}
+			else{
+				intake.Set(0.0);
+				isIntaking = false;
 			}
 		}
 
@@ -134,6 +154,7 @@ private:
 				piston.Set(DoubleSolenoid::Value::kReverse);
 				isPistonOut = false;
 			}
+
 		}
 	}
 
