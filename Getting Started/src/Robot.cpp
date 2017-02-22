@@ -90,7 +90,6 @@ private:
 		regulator_timer.Stop();
 		regulator_timer.Reset();
 		compressor->SetClosedLoopControl(true);
-
 	}
 
 	void TeleopPeriodic() override {
@@ -99,7 +98,7 @@ private:
 			myRobot.TankDrive(joystick_R.GetY(),joystick_L.GetY());
 			omniwheels1.Set((joystick_R.GetX()+joystick_L.GetX())/2);
 			omniwheels2.Set((joystick_R.GetX()+joystick_L.GetX())/2);
-		}else{
+		} else {
 			myRobot.TankDrive(-joystick_L.GetY(),-joystick_R.GetY());
 			omniwheels1.Set(-(joystick_R.GetX()+joystick_L.GetX())/2);
 			omniwheels2.Set(-(joystick_R.GetX()+joystick_L.GetX())/2);
@@ -135,12 +134,11 @@ private:
 			isRegOn = false;
 		}
 
-
 		//Climber Controls
 		wasAPressed = isAPressed;
 		isAPressed = A();
 		if(!wasAPressed && isAPressed){
-			if (!isClimbing){
+			if (!isClimbing) {
 				climber.Set (1.0);
 				isClimbing = true;
 			}
@@ -149,18 +147,19 @@ private:
 				isClimbing = false;
 			}
 		}
+		//Climber reverse
+		if(!isClimbing) {
+			if(Y()){
+				climber.Set(-1.0);
+			}else{
+				climber.Set(0.0);
+			}
+		}
 		//Piston Controls
 		if(B()){
 			piston.Set(DoubleSolenoid::Value::kReverse);
 		}else{
 			piston.Set(DoubleSolenoid::Value::kForward);
-		}
-
-		//Climber reverse
-		if(Y()){
-			climber.Set(-1.0);
-		}else{
-			climber.Set(0.0);
 		}
 	}
 
