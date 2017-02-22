@@ -9,29 +9,18 @@
 #include <Timer.h>
 
 class Shooter{
-
-
 	private:
 		frc::Talon shoot1 {100};
 		frc::Timer timer;
 	public:
-		Shooter(){
-
+		Shooter(){}
+	void shoot(double speed, double time){
+		timer.Reset();
+		timer.Start();
+		shoot1.Set(speed);
+		if(timer.HasPeriodPassed(time)){
+			shoot1.Set(0.0);
 		}
-
-		void shoot(double speed, double time){
-			timer.Reset();
-			timer.Start();
-			shoot1.Set(speed);
-			if(timer.HasPeriodPassed(time)){
-				shoot1.Set(0.0);
-			}
-			timer.Stop();
-		}
-
-
-
+		timer.Stop();
+	}
 };
-
-
-

@@ -51,8 +51,6 @@
 
 
 
-#endif /* SRC_GRIP_H_ */
-
 
 #pragma once
 #include "vision/VisionPipeline.h"

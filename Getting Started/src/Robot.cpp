@@ -13,7 +13,7 @@ public:
 		timer.Start();
 	//	CameraServer::GetInstance()->SetQuality(50);
 		CameraServer::GetInstance()->StartAutomaticCapture(0);
- 		grip::GripPipeline thingy;
+// 		grip::GripPipeline thingy;
 
 		cs::CvSink cvSink = CameraServer::GetInstance()->GetVideo();
 
@@ -23,17 +23,18 @@ public:
 	}
 
 private:
-	frc::RobotDrive myRobot { 1, 2, 0, 9 };  // Robot drive system
+	frc::RobotDrive myRobot { 0, 1, 2, 3 };  // Robot drive system
 	frc::Joystick controller { 0 }, joystick_R {1}, joystick_L { 2 };         // Only joystick
 	frc::LiveWindow* lw = frc::LiveWindow::GetInstance();
 	frc::Timer timer;
 	frc::Timer regulator_timer;
-	frc::Talon omniwheels1{3}, omniwheels2{4};
-	frc::Talon shooter{5};
-	frc::Talon intake{6};
+	frc::Talon omniwheels1{4}, omniwheels2{5};
+	frc::Talon shooter{6};
+	frc::Talon regulator{8};
 	frc::Talon climber{7};
 	frc::DoubleSolenoid piston{0, 1};
-	frc::Talon regulator{8};
+	frc::Compressor* compressor = new Compressor(0);
+
 	bool isShooting = false;
 	bool wasRbPressed = false;
 	bool isRbPressed = false;
@@ -67,6 +68,7 @@ private:
 	bool Rb(){ return controller.GetRawButton(6); }
 	bool Lb(){ return controller.GetRawButton(5); }
 	bool A(){ return controller.GetRawButton(1); }
+	bool Y(){ return controller.GetRawButton(4); }
 
 	void AutonomousInit() override {
 		timer.Reset();
@@ -87,15 +89,25 @@ private:
 		timer.Reset();
 		regulator_timer.Stop();
 		regulator_timer.Reset();
+		compressor->SetClosedLoopControl(true);
+
 	}
 
 	void TeleopPeriodic() override {
 		//Omnidrive
-		myRobot.TankDrive(-joystick_L.GetY(),-joystick_R.GetY());
-		omniwheels1.Set((joystick_R.GetX()+joystick_L.GetX())/2);
-		omniwheels2.Set((joystick_R.GetX()+joystick_L.GetX())/2);
+		if(joystick_R.GetRawButton(2)){
+			myRobot.TankDrive(joystick_R.GetY(),joystick_L.GetY());
+			omniwheels1.Set((joystick_R.GetX()+joystick_L.GetX())/2);
+			omniwheels2.Set((joystick_R.GetX()+joystick_L.GetX())/2);
+		}else{
+			myRobot.TankDrive(-joystick_L.GetY(),-joystick_R.GetY());
+			omniwheels1.Set(-(joystick_R.GetX()+joystick_L.GetX())/2);
+			omniwheels2.Set(-(joystick_R.GetX()+joystick_L.GetX())/2);
+		}
 		double regSpeed = SmartDashboard::GetNumber("DB/Slider 0", 0.5);
 		double regTime = SmartDashboard::GetNumber("DB/Slider 1", 0.5);
+		SmartDashboard::PutBoolean("DB/LED 0", isShooting);
+		SmartDashboard::PutBoolean("DB/LED 1", isClimbing);
 		// Shooter with Regulator controller
 		wasRbPressed = isRbPressed;
 		isRbPressed = Rb();
@@ -103,11 +115,13 @@ private:
 			if (!isShooting) {
 				shooter.Set (1.0);
 				isShooting = true;
+				std::cout << "[SHOOTER] On\n";
 				regulator_timer.Start();
 			}
 			else {
 				shooter.Set(0.0);
 				isShooting = false;
+				std::cout << "[SHOOTER] Stopped.\n";
 				regulator_timer.Reset();
 			}
 		}
@@ -136,20 +150,19 @@ private:
 			}
 		}
 		//Piston Controls
-		wasBPressed = isBPressed;
-		isBPressed = B();
-		if(!wasBPressed && isBPressed){
-			if (!isPistonOut){
-				piston.Set(DoubleSolenoid::Value::kForward);
-				isPistonOut = true;
-			}
-			else{
-				piston.Set(DoubleSolenoid::Value::kReverse);
-				isPistonOut = false;
-			}
+		if(B()){
+			piston.Set(DoubleSolenoid::Value::kReverse);
+		}else{
+			piston.Set(DoubleSolenoid::Value::kForward);
+		}
+
+		//Climber reverse
+		if(Y()){
+			climber.Set(-1.0);
+		}else{
+			climber.Set(0.0);
 		}
 	}
-
 
 	void TestPeriodic() override {
 		lw->Run();
