@@ -97,7 +97,7 @@ private:
 
 	void TeleopPeriodic() override {
 		/*
-		 * A Network of Tables
+		 * FIXME: A Network of Tables
 		 */
 		std::cout << "Areas: ";
 
@@ -108,15 +108,15 @@ private:
 
 		std::cout << std::endl;
 
-		// Omnidrive
+		// TODO: Omnidrive hdrive
 		if(joystick_R.GetRawButton(2)){
 			myRobot.TankDrive(joystick_R.GetY(),joystick_L.GetY());
-			omniwheels1.Set((joystick_R.GetX()+joystick_L.GetX())/2);
-			omniwheels2.Set((joystick_R.GetX()+joystick_L.GetX())/2);
-		} else {
-			myRobot.TankDrive(-joystick_L.GetY(),-joystick_R.GetY());
 			omniwheels1.Set(-(joystick_R.GetX()+joystick_L.GetX())/2);
 			omniwheels2.Set(-(joystick_R.GetX()+joystick_L.GetX())/2);
+		} else {
+			myRobot.TankDrive(-joystick_L.GetY(),-joystick_R.GetY());
+			omniwheels1.Set((joystick_R.GetX()+joystick_L.GetX())/2);
+			omniwheels2.Set((joystick_R.GetX()+joystick_L.GetX())/2);
 		}
 		double regSpeed = SmartDashboard::GetNumber("DB/Slider 0", 0.5);
 		double regTime = SmartDashboard::GetNumber("DB/Slider 1", 0.5);
