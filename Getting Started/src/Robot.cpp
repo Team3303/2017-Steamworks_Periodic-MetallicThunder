@@ -8,14 +8,17 @@
 
 class Robot: public frc::IterativeRobot {
 public:
+	std::shared_ptr<NetworkTable> networkTable;
+
 	Robot() {
+		networkTable = NetworkTable::GetTable("GRIP/myContoursReport");
+
 		myRobot.SetExpiration(0.1);
 		timer.Start();
 
 		CameraServer::GetInstance()->StartAutomaticCapture(0);
 		cs::CvSink cvSink = CameraServer::GetInstance()->GetVideo();
 		cs::CvSource outputStream = CameraServer::GetInstance()->PutVideo("Blur", 640, 480);
-
 	}
 
 private:
@@ -44,7 +47,6 @@ private:
 	bool wasBPressed = false;
 	bool isBPressed = false;
 	bool isRegOn = false;
-
 	bool isXPressed = false;
 	bool wasXPressed = false;
 	bool isCompressing = false;
@@ -56,6 +58,7 @@ private:
 			return false;
 		}
 	}
+
 	bool d_pad_down() {
 		if ( controller.GetPOV(0) >= 135 && controller.GetPOV(0) <= 215 ) {
 			return true;
@@ -93,6 +96,18 @@ private:
 	}
 
 	void TeleopPeriodic() override {
+		/*
+		 * A Network of Tables
+		 */
+		std::cout << "Areas: ";
+
+		std::vector<double> arr = networkTable->GetNumberArray("area", llvm::ArrayRef<double>());
+		for(unsigned int i = 0; i < arr.size(); i++){
+			std::cout<<arr[i] << " ";
+		}
+
+		std::cout << std::endl;
+
 		// Omnidrive
 		if(joystick_R.GetRawButton(2)){
 			myRobot.TankDrive(joystick_R.GetY(),joystick_L.GetY());
