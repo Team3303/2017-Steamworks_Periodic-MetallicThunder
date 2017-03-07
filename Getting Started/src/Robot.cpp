@@ -113,7 +113,7 @@ private:
 			myRobot.TankDrive(turnSpeed, -turnSpeed);
 		}
 		
-		myRobot.Drive(0.0);
+		myRobot.Drive(0.0, 0.0);
 	}
 	
 	void AutonomousInit() override {
@@ -124,7 +124,7 @@ private:
 
 	void AutonomousPeriodic() override {
 		
-		std::sringstream stream;
+		std::stringstream stream;
 		std::string gyroValue;
 		stream << gyro.GetAngle();
 		stream >> gyroValue;
@@ -134,12 +134,12 @@ private:
 		// Drive for driveTime seconds
 		if (timer.Get() < driveTime) {
 			myRobot.Drive(-0.5, 0.0);  // Drive forwards half speed
-		} else if timer.Get() < (driveTime + 0.5){
+		} else if (timer.Get() < (driveTime + 0.5)){
 			myRobot.Drive(0.0, 0.0);  // Stop robot
 		} else if(SmartDashboard::GetBoolean("DB/Button 0", false)){
-			if timer.Get() < (driveTime + 0.5 + 0.5){
+			if (timer.Get() < (driveTime + 0.5 + 0.5)){
 				piston.Set(DoubleSolenoid::Value::kReverse);            //fire piston
-			} else if timer.Get() < (driveTime + 0.5 + 0.5 + 0.5){
+			} else if (timer.Get() < (driveTime + 0.5 + 0.5 + 0.5)){
 				piston.Set(DoubleSolenoid::Value::kReverse);            //retract piston
 			}
 		}else{
@@ -166,11 +166,11 @@ private:
 //		}
 
 		//gyro to dashboard
-		std::sringstream stream;
+		std::stringstream stream;
 		std::string gyroValue;
 		stream << gyro.GetAngle();
 		stream >> gyroValue;
-		SmartDasboard::PutString("DB/String 0", gyroValue);
+		SmartDashboard::PutString("DB/String 0", gyroValue);
 
 		// TODO: Omnidrive hdrive
 		if(joystick_R.GetRawButton(2)){
