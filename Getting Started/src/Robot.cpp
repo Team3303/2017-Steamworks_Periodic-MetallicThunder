@@ -5,6 +5,7 @@
 #include <Timer.h>
 #include <TalonTest.cpp>
 #include <GRIP.cpp>
+#include <math.h>
 
 class Robot: public frc::IterativeRobot {
 public:
@@ -33,7 +34,8 @@ private:
 	frc::Talon climber{ 7 };
 	frc::DoubleSolenoid piston{ 0, 1 };
 	frc::Compressor* compressor = new Compressor( 0 );
-
+	frc::Gyro gyro;
+	
 	bool isShooting = false;
 	bool wasRbPressed = false;
 	bool isRbPressed = false;
@@ -51,6 +53,11 @@ private:
 	bool wasXPressed = false;
 	bool isCompressing = false;
 
+	// camera 
+	double centerPixel = 400.0;  //find correct value
+	double FOV = 1.16937;  //radians
+	double focalLength = centerPixel / tan(FOV / 2.0);
+	
 	bool d_pad_up() {
 		if ( (controller.GetPOV(0) >= 0 && controller.GetPOV(0) <= 45) || controller.GetPOV(0) == 315 ) {
 			return true;
@@ -73,6 +80,22 @@ private:
 	bool Y(){ return controller.GetRawButton(4); }
 	bool Lb(){ return controller.GetRawButton(5); }
 	bool Rb(){ return controller.GetRawButton(6); }
+	
+	void TargetHook(int button) {
+		
+		//calculate angle offset
+		std::vector<double> centerXarr = networkTable->GetNumberArray("centerX", llvm::ArrayRef<double>());
+		double centerX =(centerXarr[0] + centerXarr[1]) / 2;
+		double pixelOffset = centerX - centerPixel;
+		double angleOffset = atan(pixelOffset / focalLength);  //radians
+		
+		gyro.reset();
+		myRobot.TankDrive(0.5, -0.5);
+		while(gyro.Get() > -1.0 && gyro.Get < 1.0 && !controller.GetRawButton(button)){}
+		
+		myRobot.Drive(0.0, 0.0);
+		
+	}
 
 	void AutonomousInit() override {
 		timer.Reset();
