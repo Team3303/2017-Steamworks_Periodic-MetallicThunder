@@ -3,8 +3,6 @@
 #include <LiveWindow/LiveWindow.h>
 #include <RobotDrive.h>
 #include <Timer.h>
-#include <TalonTest.cpp>
-#include <GRIP.cpp>
 
 class Robot: public frc::IterativeRobot {
 public:
