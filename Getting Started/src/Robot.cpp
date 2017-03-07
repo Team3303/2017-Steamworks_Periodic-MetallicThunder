@@ -4,6 +4,7 @@
 #include <RobotDrive.h>
 #include <Timer.h>
 #include <math.h>
+#include "wpilib.h"
 
 class Robot: public frc::IterativeRobot {
 public:
@@ -32,7 +33,7 @@ private:
 	frc::Talon climber{ 7 };
 	frc::DoubleSolenoid piston{ 0, 1 };
 	frc::Compressor* compressor = new Compressor( 0 );
-	frc::Gyro gyro;
+	frc::AnalogGyro gyro{ 1 };
 	
 	bool isShooting = false;
 	bool wasRbPressed = false;
@@ -85,11 +86,11 @@ private:
 		std::vector<double> centerXarr = networkTable->GetNumberArray("centerX", llvm::ArrayRef<double>());
 		double centerX =(centerXarr[0] + centerXarr[1]) / 2;
 		double pixelOffset = centerX - centerPixel;
-		double angleOffset = atan(pixelOffset / focalLength);  //radians
+		double angleOffset = atan(pixelOffset / focalLength);  // Radians
 		
-		gyro.reset();
+		gyro.Reset();
 		myRobot.TankDrive(0.5, -0.5);
-		while(gyro.Get() > -1.0 && gyro.Get < 1.0 && !controller.GetRawButton(button)){}
+		while( gyro.GetAngle() < angleOffset && !controller.GetRawButton(button) ) {}
 		
 		myRobot.Drive(0.0, 0.0);
 		
@@ -120,14 +121,11 @@ private:
 		/*
 		 * FIXME: A Network of Tables
 		 */
-		std::cout << "Areas: ";
 
 		std::vector<double> arr = networkTable->GetNumberArray("area", llvm::ArrayRef<double>());
-		for(unsigned int i = 0; i < arr.size(); i++){
-			std::cout<<arr[i] << " ";
-		}
-
-		std::cout << std::endl;
+//		for(unsigned int i = 0; i < arr.size(); i++){
+//			std::cout << arr[i] << std::endl;
+//		}
 
 		// TODO: Omnidrive hdrive
 		if(joystick_R.GetRawButton(2)){
@@ -171,26 +169,16 @@ private:
 		}
 
 		// Climber Controls
-		wasAPressed = isAPressed;
-		isAPressed = A();
-		if(!wasAPressed && isAPressed){
-			if (!isClimbing) {
-				climber.Set (1.0);
-				isClimbing = true;
-			}
-			else {
-				climber.Set(0.0);
-				isClimbing = false;
-			}
+		double hangSpeed = SmartDashboard::GetNumber( "DB/Slider 2", 0 );
+		// Climber reverse and Hold
+		if(Y()) {
+			climber.Set( -1.0 );
+		} else if (d_pad_up()) {
+			climber.Set( hangSpeed );
+		} else {
+			climber.Set( 0.0 );
 		}
-		// Climber reverse
-		if(!isClimbing) {
-			if(Y()){
-				climber.Set(-1.0);
-			}else{
-				climber.Set(0.0);
-			}
-		}
+
 		// Piston Controls
 		if(B()){
 			piston.Set(DoubleSolenoid::Value::kReverse);
