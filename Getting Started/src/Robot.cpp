@@ -5,6 +5,7 @@
 #include <Timer.h>
 #include <math.h>
 #include "wpilib.h"
+#include <sstream>
 
 class Robot: public frc::IterativeRobot {
 public:
@@ -54,8 +55,8 @@ private:
 
 	// camera 
 	double centerPixel = 400.0;  //find correct value
-	double FOV = 1.16937;  //radians
-	double focalLength = centerPixel / tan(FOV / 2.0);
+	double FOV = 67;  //degrees
+	double focalLength = centerPixel / tan((FOV / 2.0) * (3.14159 / 180.0)); 
 	
 	bool d_pad_up() {
 		if ( (controller.GetPOV(0) >= 0 && controller.GetPOV(0) <= 45) || controller.GetPOV(0) == 315 ) {
@@ -77,36 +78,72 @@ private:
 	bool B(){ return controller.GetRawButton(2); }
 	bool X(){ return controller.GetRawButton(3); }
 	bool Y(){ return controller.GetRawButton(4); }
-	bool Lb(){ return controller.GetRawButton(5); }
+	bool Lb(){ return controller.GetRawButton(5); }  // current gyro loop break
 	bool Rb(){ return controller.GetRawButton(6); }
 	
-	void TargetHook(int button) {
+	void TargetHook() {
 		
 		//calculate angle offset
 		std::vector<double> centerXarr = networkTable->GetNumberArray("centerX", llvm::ArrayRef<double>());
 		double centerX =(centerXarr[0] + centerXarr[1]) / 2;
 		double pixelOffset = centerX - centerPixel;
-		double angleOffset = atan(pixelOffset / focalLength);  // Radians
+		double angleOffset = atan(pixelOffset / focalLength) * (180 / 3.14159);  // degrees
 		
-		gyro.Reset();
-		myRobot.TankDrive(0.5, -0.5);
-		while( gyro.GetAngle() < angleOffset && !controller.GetRawButton(button) ) {}
+	 /* gyro.Reset();
+		while( !(gyro.GetAngle() > (angleOffset - 1) && gyro.GetAngle() < (angleOffset + 1)) && !controller.GetRawButton(button) ) 
+		{
+			double angleRemaining = angleOffset - gyro.GetAngle();
+			double turnSpeed =  angleRemaining / (FOV / 2.0);
+			myRobot.TankDrive(turnSpeed, -turnSpeed);
+		}
 		
-		myRobot.Drive(0.0, 0.0);
+		myRobot.Drive(0.0, 0.0); */
+		
+		Align(angleOffset, FOV / 2.0);
 		
 	}
-
+	
+	//rotate bot to the right by angle
+	void Align(double angle, double scale){   //takes angle in degrees, and scale in max degrees
+		gyro.Reset();
+		while( !(gyro.GetAngle() > (angle - 1) && gyro.GetAngle() < (angle + 1)) && !Lb() ) 
+		{
+			double angleRemaining = angle - gyro.GetAngle();
+			double turnSpeed =  angleRemaining / scale;
+			myRobot.TankDrive(turnSpeed, -turnSpeed);
+		}
+		
+		myRobot.Drive(0.0);
+	}
+	
 	void AutonomousInit() override {
 		timer.Reset();
 		timer.Start();
+		gyro.InitGyro();
 	}
 
 	void AutonomousPeriodic() override {
-		// Drive for 2 seconds
-		if (timer.Get() < 2.0) {
+		
+		std::sringstream stream;
+		std::string gyroValue;
+		stream << gyro.GetAngle();
+		stream >> gyroValue;
+		SmartDashboard::PutString("DB/String 0", gyroValue);
+		double driveTime = SmartDashboard::GetNumber("DB/Slider 2", 2.0);
+		
+		// Drive for driveTime seconds
+		if (timer.Get() < driveTime) {
 			myRobot.Drive(-0.5, 0.0);  // Drive forwards half speed
-		} else {
+		} else if timer.Get() < (driveTime + 0.5){
 			myRobot.Drive(0.0, 0.0);  // Stop robot
+		} else if(SmartDashboard::GetBoolean("DB/Button 0", false)){
+			if timer.Get() < (driveTime + 0.5 + 0.5){
+				piston.Set(DoubleSolenoid::Value::kReverse);            //fire piston
+			} else if timer.Get() < (driveTime + 0.5 + 0.5 + 0.5){
+				piston.Set(DoubleSolenoid::Value::kReverse);            //retract piston
+			}
+		}else{
+			myRobot.Drive(0.0, 0.0);
 		}
 	}
 
@@ -115,6 +152,7 @@ private:
 		timer.Reset();
 		regulatorTimer.Stop();
 		regulatorTimer.Reset();
+		gyro.InitGyro();
 	}
 
 	void TeleopPeriodic() override {
@@ -127,6 +165,13 @@ private:
 //			std::cout << arr[i] << std::endl;
 //		}
 
+		//gyro to dashboard
+		std::sringstream stream;
+		std::string gyroValue;
+		stream << gyro.GetAngle();
+		stream >> gyroValue;
+		SmartDasboard::PutString("DB/String 0", gyroValue);
+
 		// TODO: Omnidrive hdrive
 		if(joystick_R.GetRawButton(2)){
 			myRobot.TankDrive(joystick_R.GetY(),joystick_L.GetY());
@@ -137,6 +182,7 @@ private:
 			omniwheels1.Set((joystick_R.GetX()+joystick_L.GetX())/2);
 			omniwheels2.Set((joystick_R.GetX()+joystick_L.GetX())/2);
 		}
+		
 		double regSpeed = SmartDashboard::GetNumber("DB/Slider 0", 0.5);
 		double regTime = SmartDashboard::GetNumber("DB/Slider 1", 0.5);
 		SmartDashboard::PutBoolean("DB/LED 0", isShooting);
@@ -169,12 +215,12 @@ private:
 		}
 
 		// Climber Controls
-		double hangSpeed = SmartDashboard::GetNumber( "DB/Slider 2", 0 );
+		//double hangSpeed = SmartDashboard::GetNumber( "DB/Slider 2", 0 );
 		// Climber reverse and Hold
 		if(Y()) {
 			climber.Set( -1.0 );
 		} else if (d_pad_up()) {
-			climber.Set( hangSpeed );
+			climber.Set( 0.2 );
 		} else {
 			climber.Set( 0.0 );
 		}
@@ -198,6 +244,12 @@ private:
 				compressor->SetClosedLoopControl(false);
 				isCompressing = false;
 			}
+		}
+		
+		// gyro and vision testing
+		if(A()){
+			Align(45.0, 45.0);
+			//TargetHook();
 		}
 	}
 
