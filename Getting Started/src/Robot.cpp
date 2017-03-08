@@ -18,8 +18,10 @@ public:
 		timer.Start();
 
 		CameraServer::GetInstance()->StartAutomaticCapture(0);
-		cs::CvSink cvSink = CameraServer::GetInstance()->GetVideo();
-		cs::CvSource outputStream = CameraServer::GetInstance()->PutVideo("Blur", 640, 480);
+//		cs::CvSink cvSink = CameraServer::GetInstance()->GetVideo();
+//		cs::CvSource outputStream = CameraServer::GetInstance()->PutVideo("Blur", 640, 480);
+
+		CameraServer::GetInstance()->AddAxisCamera("10.33.3.19");
 	}
 
 private:
