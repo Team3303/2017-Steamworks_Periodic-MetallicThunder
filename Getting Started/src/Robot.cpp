@@ -9,6 +9,7 @@
 
 class Robot: public frc::IterativeRobot {
 public:
+
 	std::shared_ptr<NetworkTable> networkTable;
 
 	Robot() {
@@ -217,13 +218,16 @@ private:
 		// Climber Controls
 		//double hangSpeed = SmartDashboard::GetNumber( "DB/Slider 2", 0 );
 		// Climber reverse and Hold
-		if(Y()) {
+		if(A()) {
+			climber.Set( 1.0 );
+		} else if(Y()) {
 			climber.Set( -1.0 );
 		} else if (d_pad_up()) {
 			climber.Set( 0.2 );
 		} else {
 			climber.Set( 0.0 );
 		}
+
 
 		// Piston Controls
 		if(B()){
@@ -235,19 +239,18 @@ private:
 		// Compressor Controls
 		wasXPressed = isXPressed;
 		isXPressed = X();
-		if(!wasXPressed && isXPressed){
+		if (!wasXPressed && isXPressed) {
 			if (!isCompressing) {
 				compressor->SetClosedLoopControl(true);
 				isCompressing = true;
-			}
-			else {
+			} else {
 				compressor->SetClosedLoopControl(false);
 				isCompressing = false;
 			}
 		}
 		
-		// gyro and vision testing
-		if(A()){
+		// Gyro and vision testing
+		if(d_pad_down()){
 			Align(45.0, 45.0);
 			//TargetHook();
 		}
