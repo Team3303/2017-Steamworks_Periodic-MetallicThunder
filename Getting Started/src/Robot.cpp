@@ -13,6 +13,7 @@ public:
 	std::shared_ptr<NetworkTable> networkTable;
 
 	Robot() {
+
 		networkTable = NetworkTable::GetTable("GRIP/myContoursReport");
 
 		myRobot.SetExpiration(0.1);
@@ -24,6 +25,7 @@ public:
 	}
 
 private:
+
 	frc::RobotDrive myRobot { 0, 1, 2, 3 };  // Robot drive system
 	frc::Joystick controller { 0 }, joystick_R { 1 }, joystick_L { 2 };  // Only joystick
 	frc::LiveWindow* lw = frc::LiveWindow::GetInstance();
@@ -53,11 +55,14 @@ private:
 	bool isXPressed = false;
 	bool wasXPressed = false;
 	bool isCompressing = false;
+	int xAvg = 0, yAvg = 0;
+	unsigned int i = 0;
 
-	// camera 
-	double centerPixel = 400.0;  //find correct value
+	// Camera
+	double centerPixelX = 400.0;  // The center X coord in the Axis camera image
+	double centerPixelY = 300.0;  // The center Y coord in the Axis camera image
 	double FOV = 67;  //degrees
-	double focalLength = centerPixel / tan((FOV / 2.0) * (3.14159 / 180.0)); 
+	double focalLength = centerPixelX / tan( (FOV / 2.0)*(3.14159265358979323846264338327950288419716939937510582 / 180.0) );
 	
 	bool d_pad_up() {
 		if ( (controller.GetPOV(0) >= 0 && controller.GetPOV(0) <= 45) || controller.GetPOV(0) == 315 ) {
@@ -84,10 +89,20 @@ private:
 	
 	void TargetHook() {
 		
-		//calculate angle offset
-		std::vector<double> centerXarr = networkTable->GetNumberArray("centerX", llvm::ArrayRef<double>());
-		double centerX =(centerXarr[0] + centerXarr[1]) / 2;
-		double pixelOffset = centerX - centerPixel;
+		// Calculate angle offset
+		// Get networkTables
+		std::vector<double> centerXArr = networkTable->GetNumberArray("centerX", llvm::ArrayRef<double>());
+		std::vector<double> centerYArr = networkTable->GetNumberArray("centerY", llvm::ArrayRef<double>());
+		// Center of all contour Xs
+		for (i = 0; i < centerXArr.size(); i++) { xAvg += centerXArr[i]; }
+		xAvg /= xAvg;
+		// Center of all contour Ys
+		for (i = 0; i < centerYArr.size(); i++) { yAvg += centerYArr[i]; }
+		xAvg /= centerXArr.size();
+		yAvg /= centerYArr.size();
+
+//		double centerX = (centerXArr[0] + centerXArr[1]) / 2;
+		double pixelOffset = xAvg - centerPixelX;
 		double angleOffset = atan(pixelOffset / focalLength) * (180 / 3.14159);  // degrees
 		
 	 /* gyro.Reset();
@@ -104,7 +119,7 @@ private:
 		
 	}
 	
-	//rotate bot to the right by angle
+	// Rotate robot to the right by angle
 	void Align(double angle, double scale){   //takes angle in degrees, and scale in max degrees
 		gyro.Reset();
 		while( !(gyro.GetAngle() > (angle - 1) && gyro.GetAngle() < (angle + 1)) && !Lb() ) 
