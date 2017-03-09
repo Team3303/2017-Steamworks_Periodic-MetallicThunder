@@ -60,6 +60,12 @@ private:
 	int xAvg = 0, yAvg = 0;
 	unsigned int i = 0;
 
+	//turn scaling
+	double scale;
+	double avg;
+	double diffL;
+	double diffR;
+
 	// Camera
 	double centerPixelX = 400.0;  // The center X coord in the Axis camera image
 	double centerPixelY = 300.0;  // The center Y coord in the Axis camera image
@@ -191,16 +197,26 @@ private:
 		SmartDashboard::PutString("DB/String 0", gyroValue);
 
 		// TODO: Omnidrive hdrive
+
+		scale = SmartDashboard::GetNumber("DB/Slider 3", 1.0);
+		avg = (-joystick_L.GetY() - joystick_R.GetY()) / 2.0;
+		diffL = -joystick_L.GetY() - avg;
+		diffR = -joystick_R.GetY() - avg;
+
 		if(joystick_R.GetRawButton(2)){
 			myRobot.TankDrive(joystick_R.GetY(),joystick_L.GetY());
+			//myRobot.TankDrive(-(avg + diffR * scale), -(avg + diffL * scale));
 			omniwheels1.Set(-(joystick_R.GetX()+joystick_L.GetX())/2);
 			omniwheels2.Set(-(joystick_R.GetX()+joystick_L.GetX())/2);
 		} else {
 			myRobot.TankDrive(-joystick_L.GetY(),-joystick_R.GetY());
+			//myRobot.TankDrive(avg + diffL * scale, avg + diffR * scale);
 			omniwheels1.Set((joystick_R.GetX()+joystick_L.GetX())/2);
 			omniwheels2.Set((joystick_R.GetX()+joystick_L.GetX())/2);
 		}
 		
+
+
 		double regSpeed = SmartDashboard::GetNumber("DB/Slider 0", 0.5);
 		double regTime = SmartDashboard::GetNumber("DB/Slider 1", 0.5);
 		SmartDashboard::PutBoolean("DB/LED 0", isShooting);
