@@ -157,7 +157,7 @@ private:
 		
 		// Drive for driveTime seconds
 		if (timer.Get() < driveTime) {
-			myRobot.Drive(-0.5, 0.0);  // Drive forwards half speed
+			myRobot.Drive(1.0, 0.0);  // Drive forwards half speed
 		} else if (timer.Get() < (driveTime + 0.5)){
 			myRobot.Drive(0.0, 0.0);  // Stop robot
 		} else if(SmartDashboard::GetBoolean("DB/Button 0", false)){
@@ -204,13 +204,13 @@ private:
 		diffR = -joystick_R.GetY() - avg;
 
 		if(joystick_R.GetRawButton(2)){
-			myRobot.TankDrive(joystick_R.GetY(),joystick_L.GetY());
-			//myRobot.TankDrive(-(avg + diffR * scale), -(avg + diffL * scale));
-			omniwheels1.Set(-(joystick_R.GetX()+joystick_L.GetX())/2);
-			omniwheels2.Set(-(joystick_R.GetX()+joystick_L.GetX())/2);
+			//myRobot.TankDrive(joystick_R.GetY(),joystick_L.GetY());
+			myRobot.TankDrive(-(avg + diffR * scale), -(avg + diffL * scale));
+			omniwheels1.Set((joystick_R.GetX()+joystick_L.GetX())/2);
+			omniwheels2.Set((joystick_R.GetX()+joystick_L.GetX())/2);
 		} else {
-			myRobot.TankDrive(-joystick_L.GetY(),-joystick_R.GetY());
-			//myRobot.TankDrive(avg + diffL * scale, avg + diffR * scale);
+			//myRobot.TankDrive(-joystick_L.GetY(),-joystick_R.GetY());
+			myRobot.TankDrive(avg + diffL * scale, avg + diffR * scale);
 			omniwheels1.Set((joystick_R.GetX()+joystick_L.GetX())/2);
 			omniwheels2.Set((joystick_R.GetX()+joystick_L.GetX())/2);
 		}
