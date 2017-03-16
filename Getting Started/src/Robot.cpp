@@ -24,6 +24,12 @@ public:
 //		cs::CvSource outputStream = CameraServer::GetInstance()->PutVideo("Blur", 640, 480);
 
 		CameraServer::GetInstance()->AddAxisCamera("10.33.3.19");
+
+		encoder->SetMaxPeriod(.1);
+		encoder->SetMinRate(10);
+		encoder->SetDistancePerPulse(5);
+		encoder->SetReverseDirection(true);
+		encoder->SetSamplesToAverage(7);
 	}
 
 private:
@@ -40,6 +46,7 @@ private:
 	frc::DoubleSolenoid piston{ 0, 1 };
 	frc::Compressor* compressor = new Compressor( 0 );
 	frc::AnalogGyro gyro{ 1 };
+	frc::Encoder *encoder{ 0, 1, false, Encoder::EncodingType::k4X };
 	
 	bool isShooting = false;
 	bool wasRbPressed = false;
@@ -61,10 +68,10 @@ private:
 	unsigned int i = 0;
 
 	//turn scaling
-	double scale;
-	double avg;
-	double diffL;
-	double diffR;
+	double scale = 1.0;
+	double avg = 0;
+	double diffL = 0;
+	double diffR = 0;
 
 	// Camera
 	double centerPixelX = 400.0;  // The center X coord in the Axis camera image
@@ -140,6 +147,19 @@ private:
 		myRobot.Drive(0.0, 0.0);
 	}
 	
+	void ForwardDistance(){
+
+		encoder->Reset();
+
+//		while(encoder->GetDistance() < 2.0){
+//			myRobot.Drive(1.0, 0.0);
+//		}
+
+		for (double i=0; encoder->GetDistance() < 2.0; i += 0.1) {
+			myRobot.Drive(1.0, 0.0);
+		}
+	}
+
 	void AutonomousInit() override {
 		timer.Reset();
 		timer.Start();
@@ -158,14 +178,16 @@ private:
 		// Drive for driveTime seconds
 		if (timer.Get() < driveTime) {
 			myRobot.Drive(1.0, 0.0);  // Drive forwards half speed
-		} else if (timer.Get() < (driveTime + 0.5)){
-			myRobot.Drive(0.0, 0.0);  // Stop robot
-		} else if(SmartDashboard::GetBoolean("DB/Button 0", false)){
-			if (timer.Get() < (driveTime + 0.5 + 0.5)){
-				piston.Set(DoubleSolenoid::Value::kReverse);            //fire piston
-			} else if (timer.Get() < (driveTime + 0.5 + 0.5 + 0.5)){
-				piston.Set(DoubleSolenoid::Value::kReverse);            //retract piston
-			}
+//		} else if (timer.Get() < (driveTime + 0.5)){
+//			myRobot.Drive(0.0, 0.0);  // Stop robot
+//		} else if(SmartDashboard::GetBoolean("DB/Button 0", false)){
+//			if (timer.Get() < (driveTime + 0.5 + 0.5)){
+//				piston.Set(DoubleSolenoid::Value::kReverse);            //fire piston
+//			} else if (timer.Get() < (driveTime + 0.5 + 0.5 + 0.5)){
+//				piston.Set(DoubleSolenoid::Value::kReverse);            //retract piston
+//			} else if (timer.Get() < (driveTime + 0.5 + 0.5 + 0.5 + 0.5)){
+//				myRobot.Drive(-0.5, 0.0);
+//			}
 		}else{
 			myRobot.Drive(0.0, 0.0);
 		}
@@ -196,6 +218,12 @@ private:
 		stream >> gyroValue;
 		SmartDashboard::PutString("DB/String 0", gyroValue);
 
+		std::stringstream steam;
+		std::string encoderValue;
+		steam << encoder->GetDistance();
+		steam >> encoderValue;
+		SmartDashboard::PutString("DB/String 1", encoderValue);
+
 		// TODO: Omnidrive hdrive
 
 		scale = SmartDashboard::GetNumber("DB/Slider 3", 1.0);
@@ -204,15 +232,15 @@ private:
 		diffR = -joystick_R.GetY() - avg;
 
 		if(joystick_R.GetRawButton(2)){
-			//myRobot.TankDrive(joystick_R.GetY(),joystick_L.GetY());
-			myRobot.TankDrive(-(avg + diffR * scale), -(avg + diffL * scale));
+			myRobot.TankDrive(joystick_R.GetY(),joystick_L.GetY());
+			//myRobot.TankDrive(-(avg + diffR * scale), -(avg + diffL * scale));
 			omniwheels1.Set((joystick_R.GetX()+joystick_L.GetX())/2);
 			omniwheels2.Set((joystick_R.GetX()+joystick_L.GetX())/2);
 		} else {
-			//myRobot.TankDrive(-joystick_L.GetY(),-joystick_R.GetY());
-			myRobot.TankDrive(avg + diffL * scale, avg + diffR * scale);
-			omniwheels1.Set((joystick_R.GetX()+joystick_L.GetX())/2);
-			omniwheels2.Set((joystick_R.GetX()+joystick_L.GetX())/2);
+			myRobot.TankDrive(-joystick_L.GetY(),-joystick_R.GetY());
+			//myRobot.TankDrive(avg + diffL * scale, avg + diffR * scale);
+			omniwheels1.Set(-(joystick_R.GetX()+joystick_L.GetX())/2);
+			omniwheels2.Set(-(joystick_R.GetX()+joystick_L.GetX())/2);
 		}
 		
 
