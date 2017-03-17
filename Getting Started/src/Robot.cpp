@@ -9,7 +9,6 @@
 
 class Robot: public frc::IterativeRobot {
 public:
-
 	std::shared_ptr<NetworkTable> networkTable;
 
 	Robot() {
@@ -25,11 +24,10 @@ public:
 
 		CameraServer::GetInstance()->AddAxisCamera("10.33.3.19");
 
-		encoder->SetMaxPeriod(.1);
-		encoder->SetMinRate(10);
-		encoder->SetDistancePerPulse(5);
-		encoder->SetReverseDirection(true);
-		encoder->SetSamplesToAverage(7);
+		encoder.SetMaxPeriod(.1);
+		encoder.SetMinRate(10);
+		encoder.SetDistancePerPulse(0.05212915);
+		encoder.SetSamplesToAverage(7);
 	}
 
 private:
@@ -46,7 +44,7 @@ private:
 	frc::DoubleSolenoid piston{ 0, 1 };
 	frc::Compressor* compressor = new Compressor( 0 );
 	frc::AnalogGyro gyro{ 1 };
-	frc::Encoder *encoder{ 0, 1, false, Encoder::EncodingType::k4X };
+	frc::Encoder encoder{ 0, 1, false, Encoder::EncodingType::k4X };
 	
 	bool isShooting = false;
 	bool wasRbPressed = false;
@@ -147,16 +145,13 @@ private:
 		myRobot.Drive(0.0, 0.0);
 	}
 	
-	void ForwardDistance(){
+	void ForwardDistance(double dist){
+		encoder.Reset();
+		double distLeft = dist;
 
-		encoder->Reset();
-
-//		while(encoder->GetDistance() < 2.0){
-//			myRobot.Drive(1.0, 0.0);
-//		}
-
-		for (double i=0; encoder->GetDistance() < 2.0; i += 0.1) {
-			myRobot.Drive(1.0, 0.0);
+		while(encoder.GetDistance() < dist) {
+			myRobot.Drive(distLeft < 24? distLeft / 24 : 1.0, 0.0);
+			distLeft = dist - encoder.GetDistance();
 		}
 	}
 
@@ -173,6 +168,12 @@ private:
 		stream << gyro.GetAngle();
 		stream >> gyroValue;
 		SmartDashboard::PutString("DB/String 0", gyroValue);
+
+		std::stringstream steam;
+		std::string encoderValue;
+		steam << encoder.GetDistance();
+		steam >> encoderValue;
+		SmartDashboard::PutString("DB/String 1", encoderValue);
 		double driveTime = SmartDashboard::GetNumber("DB/Slider 2", 2.0);
 		
 		// Drive for driveTime seconds
@@ -220,7 +221,7 @@ private:
 
 		std::stringstream steam;
 		std::string encoderValue;
-		steam << encoder->GetDistance();
+		steam << encoder.GetDistance();
 		steam >> encoderValue;
 		SmartDashboard::PutString("DB/String 1", encoderValue);
 
