@@ -278,16 +278,18 @@ private:
 		}
 
 		// Climber Controls
-		//double hangSpeed = SmartDashboard::GetNumber( "DB/Slider 2", 0 );
+		double hangSpeed = SmartDashboard::GetNumber( "DB/Slider 0", 0 );
 		// Climber reverse and Hold
 		if(A()) {
 			climber.Set( 1.0 );
 		} else if(Y()) {
 			climber.Set( -1.0 );
 		} else if (d_pad_up()) {
+			climber.Set( hangSpeed );
+		} else if (d_pad_down()){
 			climber.Set( 0.2 );
 		} else {
-			climber.Set( 0.0 );
+
 		}
 
 
