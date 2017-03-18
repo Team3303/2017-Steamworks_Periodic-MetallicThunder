@@ -150,17 +150,21 @@ private:
 		double distLeft = dist;
 
 		while(encoder.GetDistance() < dist) {
-			myRobot.Drive(distLeft < 24? distLeft / 24 : 1.0, 0.0);
+			myRobot.Drive(distLeft < 24 ? distLeft / 24 : 00.5, 0.0);
 			distLeft = dist - encoder.GetDistance();
 		}
+
+		myRobot.Drive(0.0, 0.0);
 	}
 
 	void AutonomousInit() override {
 		timer.Reset();
 		timer.Start();
 		gyro.InitGyro();
+		hasDriven = false;
 	}
 
+	bool hasDriven = false;
 	void AutonomousPeriodic() override {
 		
 		std::stringstream stream;
@@ -174,11 +178,17 @@ private:
 		steam << encoder.GetDistance();
 		steam >> encoderValue;
 		SmartDashboard::PutString("DB/String 1", encoderValue);
-		double driveTime = SmartDashboard::GetNumber("DB/Slider 2", 2.0);
+		double driveDist = SmartDashboard::GetNumber("DB/Slider 2", 2.0);
+
+
+		if(!hasDriven){
+			ForwardDistance(driveDist);
+		}
 		
+		hasDriven = true;
 		// Drive for driveTime seconds
-		if (timer.Get() < driveTime) {
-			myRobot.Drive(1.0, 0.0);  // Drive forwards half speed
+//		if (timer.Get() < driveTime) {
+//			myRobot.Drive(1.0, 0.0);  // Drive forwards half speed
 //		} else if (timer.Get() < (driveTime + 0.5)){
 //			myRobot.Drive(0.0, 0.0);  // Stop robot
 //		} else if(SmartDashboard::GetBoolean("DB/Button 0", false)){
@@ -189,9 +199,9 @@ private:
 //			} else if (timer.Get() < (driveTime + 0.5 + 0.5 + 0.5 + 0.5)){
 //				myRobot.Drive(-0.5, 0.0);
 //			}
-		}else{
-			myRobot.Drive(0.0, 0.0);
-		}
+//		}else{
+//			myRobot.Drive(0.0, 0.0);
+//		}
 	}
 
 	void TeleopInit() override {
@@ -228,54 +238,58 @@ private:
 		// TODO: Omnidrive hdrive
 
 		scale = SmartDashboard::GetNumber("DB/Slider 3", 1.0);
-		avg = (-joystick_L.GetY() - joystick_R.GetY()) / 2.0;
-		diffL = -joystick_L.GetY() - avg;
-		diffR = -joystick_R.GetY() - avg;
+//		avg = (-joystick_L.GetY() - joystick_R.GetY()) / 2.0;
+//		diffL = -joystick_L.GetY() - avg;
+//		diffR = -joystick_R.GetY() - avg;
 
 		if(joystick_R.GetRawButton(2)){
 			myRobot.TankDrive(joystick_R.GetY(),joystick_L.GetY());
 			//myRobot.TankDrive(-(avg + diffR * scale), -(avg + diffL * scale));
-			omniwheels1.Set((joystick_R.GetX()+joystick_L.GetX())/2);
-			omniwheels2.Set((joystick_R.GetX()+joystick_L.GetX())/2);
-		} else {
+//			omniwheels1.Set((joystick_R.GetX()+joystick_L.GetX())/2);
+//			omniwheels2.Set((joystick_R.GetX()+joystick_L.GetX())/2);
+		} else if(joystick_R.GetRawButton(3)){
+			myRobot.TankDrive(-joystick_L.GetY() * scale,-joystick_R.GetY() * scale);
+//			omniwheels1.Set((joystick_R.GetX()+joystick_L.GetX())/2);
+//			omniwheels2.Set((joystick_R.GetX()+joystick_L.GetX())/2);
+		}else{
 			myRobot.TankDrive(-joystick_L.GetY(),-joystick_R.GetY());
 			//myRobot.TankDrive(avg + diffL * scale, avg + diffR * scale);
-			omniwheels1.Set(-(joystick_R.GetX()+joystick_L.GetX())/2);
-			omniwheels2.Set(-(joystick_R.GetX()+joystick_L.GetX())/2);
+//			omniwheels1.Set(-(joystick_R.GetX()+joystick_L.GetX())/2);
+//			omniwheels2.Set(-(joystick_R.GetX()+joystick_L.GetX())/2);
 		}
 		
 
 
-		double regSpeed = SmartDashboard::GetNumber("DB/Slider 0", 0.5);
-		double regTime = SmartDashboard::GetNumber("DB/Slider 1", 0.5);
-		SmartDashboard::PutBoolean("DB/LED 0", isShooting);
-		SmartDashboard::PutBoolean("DB/LED 1", isClimbing);
-		// Shooter with Regulator controller
-		wasRbPressed = isRbPressed;
-		isRbPressed = Rb();
-		if(!wasRbPressed && isRbPressed) {
-			if (!isShooting) {
-				shooter.Set (1.0);
-				isShooting = true;
-				std::cout << "[SHOOTER] On\n";
-				regulatorTimer.Start();
-			}
-			else {
-				shooter.Set(0.0);
-				isShooting = false;
-				std::cout << "[SHOOTER] Stopped.\n";
-				regulatorTimer.Reset();
-			}
-		}
-		if(isShooting) {
-			if(regulatorTimer.HasPeriodPassed(regTime)){
-				isRegOn = !isRegOn;
-				regulator.Set(isRegOn*regSpeed);
-			}
-		} else {
-			regulator.Set(0);
-			isRegOn = false;
-		}
+//		double regSpeed = SmartDashboard::GetNumber("DB/Slider 0", 0.5);
+//		double regTime = SmartDashboard::GetNumber("DB/Slider 1", 0.5);
+//		SmartDashboard::PutBoolean("DB/LED 0", isShooting);
+//		SmartDashboard::PutBoolean("DB/LED 1", isClimbing);
+//		// Shooter with Regulator controller
+//		wasRbPressed = isRbPressed;
+//		isRbPressed = Rb();
+//		if(!wasRbPressed && isRbPressed) {
+//			if (!isShooting) {
+//				shooter.Set (1.0);
+//				isShooting = true;
+//				std::cout << "[SHOOTER] On\n";
+//				regulatorTimer.Start();
+//			}
+//			else {
+//				shooter.Set(0.0);
+//				isShooting = false;
+//				std::cout << "[SHOOTER] Stopped.\n";
+//				regulatorTimer.Reset();
+//			}
+//		}
+//		if(isShooting) {
+//			if(regulatorTimer.HasPeriodPassed(regTime)){
+//				isRegOn = !isRegOn;
+//				regulator.Set(isRegOn*regSpeed);
+//			}
+//		} else {
+//			regulator.Set(0);
+//			isRegOn = false;
+//		}
 
 		// Climber Controls
 		//double hangSpeed = SmartDashboard::GetNumber( "DB/Slider 2", 0 );
@@ -299,22 +313,33 @@ private:
 		}
 
 		// Compressor Controls
-		wasXPressed = isXPressed;
-		isXPressed = X();
-		if (!wasXPressed && isXPressed) {
-			if (!isCompressing) {
-				compressor->SetClosedLoopControl(true);
-				isCompressing = true;
-			} else {
-				compressor->SetClosedLoopControl(false);
-				isCompressing = false;
-			}
-		}
+//		wasXPressed = isXPressed;
+//		isXPressed = X();
+//		if (!wasXPressed && isXPressed) {
+//			if (!isCompressing) {
+//				compressor->SetClosedLoopControl(true);
+//				isCompressing = true;
+//			} else {
+//				compressor->SetClosedLoopControl(false);
+//				isCompressing = false;
+//			}
+//		}
 		
 		// Gyro and vision testing
 		if(d_pad_down()){
 			Align(45.0, 45.0);
 			//TargetHook();
+		}
+		if(Rb()){
+			encoder.Reset();
+		}
+
+		if(X()){
+			regulator.Set(-1.0);
+		}else if(B()){
+			regulator.Set(1.0);
+		}else{
+			regulator.Set(0.0);
 		}
 	}
 
