@@ -39,13 +39,15 @@ private:
 	frc::Timer regulatorTimer;
 	frc::Talon omniwheels1{ 4 }, omniwheels2{ 5 };
 	frc::Talon shooter{ 6 };
-	frc::Talon regulator{ 8 };
-	frc::Talon climber{ 7 };
+	frc::Talon climber{ 8 };
 	frc::DoubleSolenoid piston{ 0, 1 };
 	frc::Compressor* compressor = new Compressor( 0 );
 	frc::AnalogGyro gyro{ 1 };
 	frc::Encoder encoder{ 0, 1, false, Encoder::EncodingType::k4X };
 	
+	frc::Talon wrist{ 0 }; // FIXME
+	frc::Talon grabbers{ 7 };
+
 	bool isShooting = false;
 	bool wasRbPressed = false;
 	bool isRbPressed = false;
@@ -258,8 +260,6 @@ private:
 //			omniwheels2.Set(-(joystick_R.GetX()+joystick_L.GetX())/2);
 		}
 		
-
-
 //		double regSpeed = SmartDashboard::GetNumber("DB/Slider 0", 0.5);
 //		double regTime = SmartDashboard::GetNumber("DB/Slider 1", 0.5);
 //		SmartDashboard::PutBoolean("DB/LED 0", isShooting);
@@ -337,11 +337,26 @@ private:
 		}
 
 		if(X()){
-			regulator.Set(-1.0);
+			grabbers.Set(-1.0);
 		}else if(B()){
-			regulator.Set(1.0);
+			grabbers.Set(1.0);
 		}else{
-			regulator.Set(0.0);
+			grabbers.Set(0.0);
+		}
+
+		// FalconZ Super Lifter and Lowerer Mode
+		if (controller.GetRawAxis(2) > 0) {	wrist.Set(-0.5); }
+		else { wrist.Set(0); }
+
+		// FalconX Super Suction Mode
+		if (Lb()) {
+			grabbers.Set(1);
+		}
+		// FalconX SpitKiller Mode
+		else if (Rb()) {
+			grabbers.Set(-1);
+		} else {
+			grabbers.Set(0);
 		}
 	}
 
