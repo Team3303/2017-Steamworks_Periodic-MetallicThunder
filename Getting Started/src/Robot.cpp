@@ -101,6 +101,7 @@ private:
 	bool Y(){ return controller.GetRawButton(4); }
 	bool Lb(){ return controller.GetRawButton(5); }  // current gyro loop break
 	bool Rb(){ return controller.GetRawButton(6); }
+	bool start(){ return controller.GetRawButton(7); } //find actual number
 	
 	void TargetHook() {
 		
@@ -151,9 +152,9 @@ private:
 		encoder.Reset();
 		double distLeft = dist;
 
-		while(encoder.GetDistance() < dist) {
-			myRobot.Drive(distLeft < 24 ? distLeft / 96 : 00.25, 0.0);
+		while(encoder.GetDistance() < dist && !Lb()) {
 			distLeft = dist - encoder.GetDistance();
+			myRobot.Drive(distLeft < 24 ? distLeft / 96 : 00.25, 0.0);
 		}
 
 		myRobot.Drive(0.0, 0.0);
@@ -328,12 +329,16 @@ private:
 //		}
 		
 		// Gyro and vision testing
-		if(d_pad_down()){
+		if(X()){
 			Align(45.0, 180.0);
 			//TargetHook();
 		}
-		if(Rb()){
+		if(B()){
+			ForwardDistance(48);
+		}
+		if(start()){
 			encoder.Reset();
+			gyro.Reset();
 		}
 
 		if(X()){
