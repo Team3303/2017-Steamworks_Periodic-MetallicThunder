@@ -26,7 +26,7 @@ public:
 
 		encoder.SetMaxPeriod(.1);
 		encoder.SetMinRate(10);
-		encoder.SetDistancePerPulse(0.05212915);
+		encoder.SetDistancePerPulse(0.05212915); //should probably be 6 [wheel diameter] * pi / 360 = 0.052359...
 		encoder.SetSamplesToAverage(7);
 	}
 
@@ -152,7 +152,7 @@ private:
 		double distLeft = dist;
 
 		while(encoder.GetDistance() < dist) {
-			myRobot.Drive(distLeft < 24 ? distLeft / 24 : 00.5, 0.0);
+			myRobot.Drive(distLeft < 24 ? distLeft / 96 : 00.25, 0.0);
 			distLeft = dist - encoder.GetDistance();
 		}
 
@@ -329,7 +329,7 @@ private:
 		
 		// Gyro and vision testing
 		if(d_pad_down()){
-			Align(45.0, 45.0);
+			Align(45.0, 180.0);
 			//TargetHook();
 		}
 		if(Rb()){
