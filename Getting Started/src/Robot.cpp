@@ -26,7 +26,7 @@ public:
 
 		encoder.SetMaxPeriod(.1);
 		encoder.SetMinRate(10);
-		encoder.SetDistancePerPulse(0.05212915);
+		encoder.SetDistancePerPulse(0.05212915); //should probably be 6 [wheel diameter] * pi / 360 = 0.052359...
 		encoder.SetSamplesToAverage(7);
 	}
 
@@ -99,6 +99,7 @@ private:
 	bool Y(){ return controller.GetRawButton(4); }
 	bool Lb(){ return controller.GetRawButton(5); }  // current gyro loop break
 	bool Rb(){ return controller.GetRawButton(6); }
+	bool start(){ return controller.GetRawButton(7); } //find actual number
 	
 	void TargetHook() {
 		
@@ -138,7 +139,7 @@ private:
 		while( !(gyro.GetAngle() > (angle - 1) && gyro.GetAngle() < (angle + 1)) && !Lb() ) 
 		{
 			double angleRemaining = angle - gyro.GetAngle();
-			double turnSpeed =  angleRemaining / scale;
+			double turnSpeed =  angleRemaining / scale + 0.1;
 			myRobot.TankDrive(turnSpeed, -turnSpeed);
 		}
 		
@@ -150,9 +151,24 @@ private:
 		encoder.Reset();
 		double distLeft = dist;
 
-		while(encoder.GetDistance() < dist) {
-			myRobot.Drive(distLeft < 24 ? distLeft / 24 : 00.5, 0.0);
+		int counter = 0;
+		while(encoder.GetDistance() < dist && !Lb()) {
+			std::stringstream steam;
+			std::string encoderValue;
+			steam << encoder.GetDistance();
+			steam >> encoderValue;
+			SmartDashboard::PutString("DB/String 1", encoderValue);
+
+
+			std::stringstream steam2;
+			std::string counterValue;
+			steam2 << counter;
+			steam2 >> counterValue;
+			SmartDashboard::PutString("DB/String 2", counterValue);
+
+			counter++;
 			distLeft = dist - encoder.GetDistance();
+			myRobot.Drive(/*distLeft < 24 ? distLeft / 96 + 0.1: 00.25*/ 0.15, 0.0);
 		}
 
 		myRobot.Drive(0.0, 0.0);
@@ -282,21 +298,26 @@ private:
 		}
 		
 		// Gyro and vision testing
-//		if(d_pad_down()){
-//			Align(45.0, 45.0);
-			//TargetHook();
-//		}
-		if(Rb()){
-			encoder.Reset();
-		}
 
 		if(X()){
-			grabbers.Set(-1.0);
-		}else if(B()){
-			grabbers.Set(1.0);
-		}else{
-			grabbers.Set(0.0);
+			Align(45.0, 90.0);
+			//TargetHook();
 		}
+		if(B()){
+			ForwardDistance(200);
+		}
+		if(start()){
+			encoder.Reset();
+			gyro.Reset();
+		}
+
+//		if(X()){
+//			grabbers.Set(-1.0);
+//		}else if(B()){
+//			grabbers.Set(1.0);
+//		}else{
+//			grabbers.Set(0.0);
+//		}
 
 		// FalconZ Super Lifter and Lowerer Mode
 		if (controller.GetRawAxis(2) > 0) {	wrist.Set(-1); }
