@@ -174,11 +174,13 @@ private:
 		myRobot.Drive(0.0, 0.0);
 	}
 
+	// XXX:Autonomous
 	void AutonomousInit() override {
-		timer.Reset();
-		timer.Start();
 		gyro.InitGyro();
 		hasDriven = false;
+		ForwardDistance( (9 * 12) - 32 );
+		timer.Reset();
+		timer.Start();
 	}
 
 	bool hasDriven = false;
@@ -195,6 +197,12 @@ private:
 		steam << encoder.GetDistance();
 		steam >> encoderValue;
 		SmartDashboard::PutString("DB/String 1", encoderValue);
+
+		if (timer.Get() < 0.5)
+			grabbers.Set( 1 );
+		else
+			grabbers.Set( 0 );
+
 //		double driveDist = SmartDashboard::GetNumber("DB/Slider 2", 2.0);
 //
 //
@@ -303,37 +311,30 @@ private:
 			Align(45.0, 90.0);
 			//TargetHook();
 		}
-		if(B()){
-			ForwardDistance(200);
-		}
+
+		if( B() )
+			ForwardDistance( (9 * 12) - 32 );
+
 		if(start()){
 			encoder.Reset();
 			gyro.Reset();
 		}
 
-//		if(X()){
-//			grabbers.Set(-1.0);
-//		}else if(B()){
-//			grabbers.Set(1.0);
-//		}else{
-//			grabbers.Set(0.0);
-//		}
 
-		// FalconZ Super Lifter and Lowerer Mode
-		if (controller.GetRawAxis(2) > 0) {	wrist.Set(-0.5); }
-   else if (controller.GetRawAxis(3) > 0) { wrist.Set( 0.5); }
-		else { wrist.Set(0); }
+		// XXX:Gear
+		if (controller.GetRawAxis(2) > 0)
+			wrist.Set(-0.75);
+		else if (controller.GetRawAxis(3) > 0)
+			wrist.Set( 0.75);
+		else wrist.Set(0);
 
-		// FalconX Super Suction Mode
-		if (Lb()) {
-			grabbers.Set(1);
-		}
-		// FalconX SpitKiller Mode
-		else if (Rb()) {
+		// Gear In
+		if ( Lb() )
 			grabbers.Set(-1);
-		} else {
-			grabbers.Set(0);
-		}
+		// Gear Out
+		else if ( Rb() )
+			grabbers.Set(1);
+		else grabbers.Set(0);
 	}
 
 	void TestPeriodic() override { lw->Run(); }
