@@ -26,7 +26,7 @@ public:
 
 		encoder.SetMaxPeriod(.1);
 		encoder.SetMinRate(10);
-		encoder.SetDistancePerPulse(0.05212915);
+		encoder.SetDistancePerPulse(0.05212915); //should probably be 6 [wheel diameter] * pi / 360 = 0.052359...
 		encoder.SetSamplesToAverage(7);
 	}
 
@@ -37,15 +37,13 @@ private:
 	frc::LiveWindow* lw = frc::LiveWindow::GetInstance();
 	frc::Timer timer;
 	frc::Timer regulatorTimer;
-	frc::Talon omniwheels1{ 4 }, omniwheels2{ 5 };
-	frc::Talon shooter{ 6 };
-	frc::Talon climber{ 8 };
+	frc::Talon climber1{ 4 }, climber2{ 5 };
 	frc::DoubleSolenoid piston{ 0, 1 };
 	frc::Compressor* compressor = new Compressor( 0 );
 	frc::AnalogGyro gyro{ 1 };
 	frc::Encoder encoder{ 0, 1, false, Encoder::EncodingType::k4X };
 	
-	frc::Talon wrist{ 0 }; // FIXME
+	frc::Talon wrist{ 6 };
 	frc::Talon grabbers{ 7 };
 
 	bool isShooting = false;
@@ -101,6 +99,7 @@ private:
 	bool Y(){ return controller.GetRawButton(4); }
 	bool Lb(){ return controller.GetRawButton(5); }  // current gyro loop break
 	bool Rb(){ return controller.GetRawButton(6); }
+	bool start(){ return controller.GetRawButton(7); } //find actual number
 	
 	void TargetHook() {
 		
@@ -140,20 +139,36 @@ private:
 		while( !(gyro.GetAngle() > (angle - 1) && gyro.GetAngle() < (angle + 1)) && !Lb() ) 
 		{
 			double angleRemaining = angle - gyro.GetAngle();
-			double turnSpeed =  angleRemaining / scale;
+			double turnSpeed =  angleRemaining / scale + 0.1;
 			myRobot.TankDrive(turnSpeed, -turnSpeed);
 		}
 		
 		myRobot.Drive(0.0, 0.0);
 	}
 	
+	// TODO:Distance Tracking
 	void ForwardDistance(double dist){
 		encoder.Reset();
 		double distLeft = dist;
 
-		while(encoder.GetDistance() < dist) {
-			myRobot.Drive(distLeft < 24 ? distLeft / 24 : 00.5, 0.0);
+		int counter = 0;
+		while(encoder.GetDistance() < dist && !Lb()) {
+			std::stringstream steam;
+			std::string encoderValue;
+			steam << encoder.GetDistance();
+			steam >> encoderValue;
+			SmartDashboard::PutString("DB/String 1", encoderValue);
+
+
+			std::stringstream steam2;
+			std::string counterValue;
+			steam2 << counter;
+			steam2 >> counterValue;
+			SmartDashboard::PutString("DB/String 2", counterValue);
+
+			counter++;
 			distLeft = dist - encoder.GetDistance();
+			myRobot.Drive(/*distLeft < 24 ? distLeft / 96 + 0.1: 00.25*/ 0.15, 0.0);
 		}
 
 		myRobot.Drive(0.0, 0.0);
@@ -180,12 +195,12 @@ private:
 		steam << encoder.GetDistance();
 		steam >> encoderValue;
 		SmartDashboard::PutString("DB/String 1", encoderValue);
-		double driveDist = SmartDashboard::GetNumber("DB/Slider 2", 2.0);
-
-
-		if(!hasDriven){
-			ForwardDistance(driveDist);
-		}
+//		double driveDist = SmartDashboard::GetNumber("DB/Slider 2", 2.0);
+//
+//
+//		if(!hasDriven){
+//			ForwardDistance(driveDist);
+//		}
 		
 		hasDriven = true;
 		// Drive for driveTime seconds
@@ -237,10 +252,9 @@ private:
 		steam >> encoderValue;
 		SmartDashboard::PutString("DB/String 1", encoderValue);
 
-		// TODO: Omnidrive hdrive
-
+		// TODO: Make Omnidrive WCoast
 		scale = SmartDashboard::GetNumber("DB/Slider 3", 1.0);
-//		avg = (-joystick_L.GetY() - joystick_R.GetY()) / 2.0;
+		avg = (-joystick_L.GetY() - joystick_R.GetY()) / 2.0;
 //		diffL = -joystick_L.GetY() - avg;
 //		diffR = -joystick_R.GetY() - avg;
 
@@ -259,94 +273,56 @@ private:
 //			omniwheels1.Set(-(joystick_R.GetX()+joystick_L.GetX())/2);
 //			omniwheels2.Set(-(joystick_R.GetX()+joystick_L.GetX())/2);
 		}
-		
-//		double regSpeed = SmartDashboard::GetNumber("DB/Slider 0", 0.5);
-//		double regTime = SmartDashboard::GetNumber("DB/Slider 1", 0.5);
-//		SmartDashboard::PutBoolean("DB/LED 0", isShooting);
-//		SmartDashboard::PutBoolean("DB/LED 1", isClimbing);
-//		// Shooter with Regulator controller
-//		wasRbPressed = isRbPressed;
-//		isRbPressed = Rb();
-//		if(!wasRbPressed && isRbPressed) {
-//			if (!isShooting) {
-//				shooter.Set (1.0);
-//				isShooting = true;
-//				std::cout << "[SHOOTER] On\n";
-//				regulatorTimer.Start();
-//			}
-//			else {
-//				shooter.Set(0.0);
-//				isShooting = false;
-//				std::cout << "[SHOOTER] Stopped.\n";
-//				regulatorTimer.Reset();
-//			}
-//		}
-//		if(isShooting) {
-//			if(regulatorTimer.HasPeriodPassed(regTime)){
-//				isRegOn = !isRegOn;
-//				regulator.Set(isRegOn*regSpeed);
-//			}
-//		} else {
-//			regulator.Set(0);
-//			isRegOn = false;
-//		}
 
 		// Climber Controls
-		double hangSpeed = SmartDashboard::GetNumber( "DB/Slider 0", 0 );
+		double hangSpeed = SmartDashboard::GetNumber( "DB/Slider 2", 0 );
+		double grabSpeed = SmartDashboard::GetNumber( "DB/Slider 0", 0 );
+		double climbSpeed = SmartDashboard::GetNumber( "DB/Slider 1", 0 );
+
 		// Climber reverse and Hold
 		if(A()) {
-			climber.Set( 1.0 );
+			climber1.Set( climbSpeed );
+			climber2.Set( climbSpeed );
 		} else if(Y()) {
-			climber.Set( -1.0 );
+			climber1.Set( -grabSpeed );
+			climber2.Set( -grabSpeed );
 		} else if (d_pad_up()) {
-			climber.Set( hangSpeed );
+			climber1.Set( hangSpeed );
+			climber2.Set( hangSpeed );
 		} else if (d_pad_down()){
-			climber.Set( 0.2 );
+			climber1.Set( grabSpeed );
+			climber2.Set( grabSpeed );
 		} else {
-
+			climber1.Set( 0.0 );
+			climber2.Set( 0.0 );
 		}
-
-
-		// Piston Controls
-		if(B()){
-			piston.Set(DoubleSolenoid::Value::kReverse);
-		}else{
-			piston.Set(DoubleSolenoid::Value::kForward);
-		}
-
-		// Compressor Controls
-//		wasXPressed = isXPressed;
-//		isXPressed = X();
-//		if (!wasXPressed && isXPressed) {
-//			if (!isCompressing) {
-//				compressor->SetClosedLoopControl(true);
-//				isCompressing = true;
-//			} else {
-//				compressor->SetClosedLoopControl(false);
-//				isCompressing = false;
-//			}
-//		}
 		
 		// Gyro and vision testing
-		if(d_pad_down()){
-			Align(45.0, 45.0);
-			//TargetHook();
-		}
-		if(Rb()){
-			encoder.Reset();
-		}
 
 		if(X()){
-			grabbers.Set(-1.0);
-		}else if(B()){
-			grabbers.Set(1.0);
-		}else{
-			grabbers.Set(0.0);
+			Align(45.0, 90.0);
+			//TargetHook();
 		}
+		if(B()){
+			ForwardDistance(200);
+		}
+		if(start()){
+			encoder.Reset();
+			gyro.Reset();
+		}
+
+//		if(X()){
+//			grabbers.Set(-1.0);
+//		}else if(B()){
+//			grabbers.Set(1.0);
+//		}else{
+//			grabbers.Set(0.0);
+//		}
 
 		// FalconZ Super Lifter and Lowerer Mode
 		if (controller.GetRawAxis(2) > 0) {	wrist.Set(-0.5); }
-   else if (controller.GetRawAxis(3) > 0) { wrist.Set( 0.5); }
+		else if (controller.GetRawAxis(3) > 0) { wrist.Set( 0.5); }
+		else { wrist.Set(0); }
 
 		// FalconX Super Suction Mode
 		if (Lb()) {
@@ -360,9 +336,7 @@ private:
 		}
 	}
 
-	void TestPeriodic() override {
-		lw->Run();
-	}
+	void TestPeriodic() override { lw->Run(); }
 };
 
-START_ROBOT_CLASS(Robot)
+START_ROBOT_CLASS(Robot);
