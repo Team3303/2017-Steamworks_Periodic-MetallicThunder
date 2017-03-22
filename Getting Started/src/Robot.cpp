@@ -346,7 +346,7 @@ private:
 
 		// FalconZ Super Lifter and Lowerer Mode
 		if (controller.GetRawAxis(2) > 0) {	wrist.Set(-0.5); }
-		else { wrist.Set(0); }
+   else if (controller.GetRawAxis(3) > 0) { wrist.Set( 0.5); }
 
 		// FalconX Super Suction Mode
 		if (Lb()) {
